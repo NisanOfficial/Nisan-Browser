@@ -3,26 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Browser</title>
+<title>Mini Browser</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body, html { height:100%; background:#1a1a1a; }
+body, html { height:100%; background:#1a1a1a; overflow:hidden; }
 .topbar {
   height:50px; background:#2d2d2d; display:flex; 
-  align-items:center; padding:0 10px; gap:8px;
+  align-items:center; padding:0 8px; gap:6px;
 }
+.topbar button {
+  height:35px; min-width:35px; background:#404040;
+  border:none; border-radius:18px; color:#fff; cursor:pointer;
+  font-size:16px;
+}
+.topbar button:active { background:#555; }
 .topbar input {
   flex:1; height:35px; padding:0 12px; 
   background:#1a1a1a; border:none; border-radius:18px;
   color:#fff; outline:none; font-size:14px;
 }
-.topbar button {
-  height:35px; padding:0 15px; background:#404040;
-  border:none; border-radius:18px; color:#fff; cursor:pointer;
-}
-.topbar button:hover { background:#555; }
 iframe {
   width:100%; height:calc(100% - 50px); border:none;
+  background:#fff;
+}
+.loader {
+  position:absolute; top:50px; left:0; right:0;
+  height:3px; background:#404040; display:none;
+}
+.loader div {
+  height:100%; width:0%; background:#1e90ff;
+  animation:loading 2s infinite;
+}
+@keyframes loading {
+ 0% { width:0%; }
+ 50% { width:70%; }
+ 100% { width:100%; }
 }
 </style>
 </head>
@@ -32,43 +47,63 @@ iframe {
   <button onclick="goBack()">←</button>
   <button onclick="goForward()">→</button>
   <button onclick="reload()">⟳</button>
-  <input type="text" id="url" placeholder="Enter URL like google.com" value="google.com">
+  <input type="text" id="url" placeholder="Enter URL..." value="netlify.com">
   <button onclick="go()">Go</button>
 </div>
 
-<iframe id="frame" src="https://www.google.com"></iframe>
+<div class="loader" id="loader"><div></div></div>
+<iframe id="frame" src=""></iframe>
 
 <script>
 const frame = document.getElementById('frame');
 const urlInput = document.getElementById('url');
+const loader = document.getElementById('loader');
+
+const PROXY = 'https://api.allorigins.win/raw?url=';
+
+window.onload = () => {
+  go(); // Auto load default site
+}
 
 function go(){
   let url = urlInput.value.trim();
-  
   if(!url) return;
   
-  // http na thakle add koro
   if(!url.startsWith('http')){
     url = 'https://' + url;
   }
   
-  frame.src = url;
+  showLoader();
+  frame.src = PROXY + encodeURIComponent(url);
   urlInput.value = url.replace('https://', '').replace('http://', '');
 }
 
 function goBack(){
-  history.back();
+  frame.contentWindow.history.back();
 }
 
 function goForward(){
-  history.forward();
+  frame.contentWindow.history.forward();
 }
 
 function reload(){
+  showLoader();
   frame.src = frame.src;
 }
 
-// Enter press korle search hobe
+function showLoader(){
+  loader.style.display = 'block';
+}
+
+frame.onload = () => {
+  loader.style.display = 'none';
+}
+
+frame.onerror = () => {
+  loader.style.display = 'none';
+  alert('Site load hoi nai. Try onno site.');
+}
+
 urlInput.addEventListener('keypress', e => {
   if(e.key === 'Enter') go();
 });
