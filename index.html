@@ -3,67 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Browser</title>
+<title>NisanX Browser</title>
+<link rel="icon" type="image/jpg" href="NisanX.jpg">
+
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body, html { height:100%; background:#1a1a1a; overflow:hidden; }
+body, html { 
+  height:100%; 
+  background:#0a0a0a; 
+  overflow:hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
 .topbar {
-  height:50px; background:#2d2d2d; display:flex; 
-  align-items:center; padding:0 8px; gap:6px;
+  height:55px; 
+  background:linear-gradient(90deg, #1a1a1a, #2d2d2d);
+  display:flex; 
+  align-items:center; 
+  padding:0 10px; 
+  gap:8px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+  animation:slideDown 0.5s ease;
 }
-.topbar button {
-  height:35px; min-width:35px; background:#404040;
-  border:none; border-radius:18px; color:#fff; cursor:pointer;
-  font-size:16px;
+
+@keyframes slideDown {
+  from { transform:translateY(-100%); opacity:0; }
+  to { transform:translateY(0); opacity:1; }
 }
-.topbar button:active { background:#555; }
+
+.logo {
+  width:35px;
+  height:35px;
+  border-radius:8px;
+  object-fit:cover;
+}
+
 .topbar input {
-  flex:1; height:35px; padding:0 12px; 
-  background:#1a1a1a; border:none; border-radius:18px;
-  color:#fff; outline:none; font-size:14px;
+  flex:1; 
+  height:38px; 
+  padding:0 15px; 
+  background:#121212; 
+  border:1px solid #333;
+  border-radius:20px;
+  color:#fff; 
+  outline:none; 
+  font-size:14px;
+  transition:0.3s;
 }
+.topbar input:focus {
+  border-color:#1e90ff;
+  box-shadow:0 0 10px rgba(30,144,255,0.3);
+}
+
+.topbar button {
+  height:38px; 
+  min-width:38px;
+  padding:0 12px;
+  background:#333;
+  border:none; 
+  border-radius:20px; 
+  color:#fff; 
+  cursor:pointer;
+  font-size:16px;
+  transition:0.2s;
+}
+.topbar button:hover {
+  background:#1e90ff;
+  transform:scale(1.05);
+}
+.topbar button:active {
+  transform:scale(0.95);
+}
+
 iframe {
-  width:100%; height:calc(100% - 50px); border:none;
+  width:100%; 
+  height:calc(100% - 55px); 
+  border:none;
   background:#fff;
+  animation:fadeIn 0.8s ease;
 }
+
+@keyframes fadeIn {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+
 .loader {
-  position:absolute; top:50px; left:0; right:0;
-  height:3px; background:#404040; display:none;
+  position:absolute; 
+  top:55px; 
+  left:0; 
+  right:0;
+  height:3px; 
+  background:transparent; 
+  display:none;
+  z-index:10;
 }
 .loader div {
-  height:100%; width:0%; background:#1e90ff;
-  animation:loading 2s infinite;
+  height:100%; 
+  width:0%; 
+  background:linear-gradient(90deg, #1e90ff, #00d4ff);
+  animation:loading 1.5s infinite;
+  box-shadow:0 0 10px #1e90ff;
 }
 @keyframes loading {
- 0% { width:0%; }
- 50% { width:70%; }
- 100% { width:100%; }
+ 0% { width:0%; margin-left:0%; }
+ 50% { width:70%; margin-left:15%; }
+ 100% { width:0%; margin-left:100%; }
+}
+
+.welcome {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  text-align:center;
+  color:#666;
+  animation:fadeIn 1s ease;
+}
+.welcome img {
+  width:80px;
+  height:80px;
+  border-radius:15px;
+  margin-bottom:15px;
+  box-shadow:0 0 20px rgba(30,144,255,0.5);
+}
+.welcome h2 {
+  color:#1e90ff;
+  margin-bottom:10px;
 }
 </style>
 </head>
 <body>
 
 <div class="topbar">
+  <img src="NisanX.jpg" class="logo" alt="NisanX">
   <button onclick="goBack()">←</button>
   <button onclick="goForward()">→</button>
   <button onclick="reload()">⟳</button>
-  <input type="text" id="url" placeholder="Enter URL..." value="netlify.com">
+  <input type="text" id="url" placeholder="Search or enter URL..." value="wikipedia.org">
   <button onclick="go()">Go</button>
 </div>
 
 <div class="loader" id="loader"><div></div></div>
+
+<div class="welcome" id="welcome">
+  <img src="NisanX.jpg" alt="NisanX">
+  <h2>Welcome to NisanX Browser</h2>
+  <p>Enter any URL above to start browsing</p>
+</div>
+
 <iframe id="frame" src=""></iframe>
 
 <script>
 const frame = document.getElementById('frame');
 const urlInput = document.getElementById('url');
 const loader = document.getElementById('loader');
-
-const PROXY = 'https://api.allorigins.win/raw?url=';
-
-window.onload = () => {
-  go(); // Auto load default site
-}
+const welcome = document.getElementById('welcome');
 
 function go(){
   let url = urlInput.value.trim();
@@ -73,8 +168,9 @@ function go(){
     url = 'https://' + url;
   }
   
-  showLoader();
-  frame.src = PROXY + encodeURIComponent(url);
+  welcome.style.display = 'none';
+  loader.style.display = 'block';
+  frame.src = url;
   urlInput.value = url.replace('https://', '').replace('http://', '');
 }
 
@@ -87,12 +183,8 @@ function goForward(){
 }
 
 function reload(){
-  showLoader();
-  frame.src = frame.src;
-}
-
-function showLoader(){
   loader.style.display = 'block';
+  frame.src = frame.src;
 }
 
 frame.onload = () => {
@@ -101,7 +193,7 @@ frame.onload = () => {
 
 frame.onerror = () => {
   loader.style.display = 'none';
-  alert('Site load hoi nai. Try onno site.');
+  alert('Site ta load holo na. Kichu site iframe block kore rakhe.');
 }
 
 urlInput.addEventListener('keypress', e => {
