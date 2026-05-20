@@ -3,91 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyTube Browser</title>
+<title>Simple Browser</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#0f0f0f; color:#fff; font-family:Arial, sans-serif; }
+body, html { height:100%; background:#1a1a1a; }
 .topbar {
-  position:sticky; top:0;
-  background:#202020; padding:10px;
-  display:flex; gap:8px; z-index:10;
+  height:50px; background:#2d2d2d; display:flex; 
+  align-items:center; padding:0 10px; gap:8px;
 }
 .topbar input {
-  flex:1; padding:10px; border:none; border-radius:20px;
-  background:#121212; color:#fff; outline:none;
+  flex:1; height:35px; padding:0 12px; 
+  background:#1a1a1a; border:none; border-radius:18px;
+  color:#fff; outline:none; font-size:14px;
 }
 .topbar button {
-  padding:10px 16px; border:none; border-radius:20px;
-  background:#303030; color:#fff; cursor:pointer;
+  height:35px; padding:0 15px; background:#404040;
+  border:none; border-radius:18px; color:#fff; cursor:pointer;
 }
-.grid {
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:15px; padding:15px;
-}
-.card { cursor:pointer; }
-.card img {
-  width:100%; aspect-ratio:16/9; border-radius:12px; object-fit:cover;
-}
-.card h3 { font-size:15px; margin-top:8px; }
-.player {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:#000; display:none; z-index:20;
-}
-.player iframe { width:100%; height:100%; border:none; }
-.player .close {
-  position:absolute; top:10px; right:20px; font-size:35px;
-  color:#fff; cursor:pointer; z-index:21;
+.topbar button:hover { background:#555; }
+iframe {
+  width:100%; height:calc(100% - 50px); border:none;
 }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <input type="text" id="search" placeholder="Search YouTube..." value="Bangla Song">
-  <button onclick="search()">Search</button>
+  <button onclick="goBack()">←</button>
+  <button onclick="goForward()">→</button>
+  <button onclick="reload()">⟳</button>
+  <input type="text" id="url" placeholder="Enter URL like google.com" value="google.com">
+  <button onclick="go()">Go</button>
 </div>
 
-<div class="grid" id="grid"></div>
-
-<div class="player" id="player">
-  <span class="close" onclick="closePlayer()">×</span>
-  <iframe id="iframe" allow="autoplay; fullscreen"></iframe>
-</div>
+<iframe id="frame" src="https://www.google.com"></iframe>
 
 <script>
-const API_KEY = "PASTE_YOUR_YOUTUBE_API_KEY_HERE"; // Niche kivabe niba disi
+const frame = document.getElementById('frame');
+const urlInput = document.getElementById('url');
 
-async function search() {
-  let q = document.getElementById('search').value;
-  if(!q) return;
+function go(){
+  let url = urlInput.value.trim();
   
-  let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${q}&key=${API_KEY}`;
+  if(!url) return;
   
-  let res = await fetch(url);
-  let data = await res.json();
+  // http na thakle add koro
+  if(!url.startsWith('http')){
+    url = 'https://' + url;
+  }
   
-  let html = data.items.map(v => `
-    <div class="card" onclick="playVideo('${v.id.videoId}')">
-      <img src="${v.snippet.thumbnails.high.url}">
-      <h3>${v.snippet.title}</h3>
-    </div>
-  `).join('');
-  
-  document.getElementById('grid').innerHTML = html;
+  frame.src = url;
+  urlInput.value = url.replace('https://', '').replace('http://', '');
 }
 
-function playVideo(id){
-  document.getElementById('player').style.display='block';
-  document.getElementById('iframe').src=`https://www.youtube.com/embed/${id}?autoplay=1`;
+function goBack(){
+  history.back();
 }
 
-function closePlayer(){
-  document.getElementById('player').style.display='none';
-  document.getElementById('iframe').src='';
+function goForward(){
+  history.forward();
 }
 
-// Page load e default search
-search();
+function reload(){
+  frame.src = frame.src;
+}
+
+// Enter press korle search hobe
+urlInput.addEventListener('keypress', e => {
+  if(e.key === 'Enter') go();
+});
 </script>
 
 </body>
