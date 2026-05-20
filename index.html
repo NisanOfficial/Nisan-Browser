@@ -3,81 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>N1SA9 Browser</title>
+<title>MyTube Browser</title>
 <style>
-* { margin:0; padding:0; }
-body, html { height: 100%; overflow: hidden; background:#000; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0f0f0f; color:#fff; font-family:Arial, sans-serif; }
 .topbar {
-  height: 45px;
-  background: #202020;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  gap: 8px;
+  position:sticky; top:0;
+  background:#202020; padding:10px;
+  display:flex; gap:8px; z-index:10;
 }
 .topbar input {
-  flex: 1;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 20px;
-  background: #121212;
-  color: #fff;
-  font-size: 14px;
-  outline: none;
+  flex:1; padding:10px; border:none; border-radius:20px;
+  background:#121212; color:#fff; outline:none;
 }
 .topbar button {
-  padding: 8px 12px;
-  background: #303030;
-  border: none;
-  border-radius: 20px;
-  color: #fff;
-  cursor: pointer;
+  padding:10px 16px; border:none; border-radius:20px;
+  background:#303030; color:#fff; cursor:pointer;
 }
-iframe {
-  width: 100%;
-  height: calc(100% - 45px);
-  border: none;
+.grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:15px; padding:15px;
+}
+.card { cursor:pointer; }
+.card img {
+  width:100%; aspect-ratio:16/9; border-radius:12px; object-fit:cover;
+}
+.card h3 { font-size:15px; margin-top:8px; }
+.player {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#000; display:none; z-index:20;
+}
+.player iframe { width:100%; height:100%; border:none; }
+.player .close {
+  position:absolute; top:10px; right:20px; font-size:35px;
+  color:#fff; cursor:pointer; z-index:21;
 }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button onclick="goBack()">←</button>
-  <button onclick="goForward()">→</button>
-  <button onclick="reload()">⟳</button>
-  <input type="text" id="url" value="https://m.youtube.com/?persist_app=1&app=desktop">
-  <button onclick="go()">Go</button>
+  <input type="text" id="search" placeholder="Search YouTube..." value="Bangla Song">
+  <button onclick="search()">Search</button>
 </div>
 
-<iframe id="frame" src="https://m.youtube.com/?persist_app=1&app=desktop" 
-  allow="autoplay; fullscreen">
-</iframe>
+<div class="grid" id="grid"></div>
+
+<div class="player" id="player">
+  <span class="close" onclick="closePlayer()">×</span>
+  <iframe id="iframe" allow="autoplay; fullscreen"></iframe>
+</div>
 
 <script>
-const frame = document.getElementById('frame');
-const urlInput = document.getElementById('url');
+const API_KEY = "PASTE_YOUR_YOUTUBE_API_KEY_HERE"; // Niche kivabe niba disi
 
-function go(){
-  let url = urlInput.value;
-  if(!url.startsWith('http')) url = 'https://' + url;
+async function search() {
+  let q = document.getElementById('search').value;
+  if(!q) return;
   
-  // Force desktop mode
-  if(url.includes('youtube.com') && !url.includes('app=desktop')){
-    url += url.includes('?') ? '&app=desktop' : '?app=desktop';
-  }
+  let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${q}&key=${API_KEY}`;
   
-  frame.src = url;
+  let res = await fetch(url);
+  let data = await res.json();
+  
+  let html = data.items.map(v => `
+    <div class="card" onclick="playVideo('${v.id.videoId}')">
+      <img src="${v.snippet.thumbnails.high.url}">
+      <h3>${v.snippet.title}</h3>
+    </div>
+  `).join('');
+  
+  document.getElementById('grid').innerHTML = html;
 }
 
-function goBack(){ frame.contentWindow.history.back(); }
-function goForward(){ frame.contentWindow.history.forward(); }
-function reload(){ frame.src = frame.src; }
+function playVideo(id){
+  document.getElementById('player').style.display='block';
+  document.getElementById('iframe').src=`https://www.youtube.com/embed/${id}?autoplay=1`;
+}
 
-// Enter press korle go
-urlInput.addEventListener('keypress', e => {
-  if(e.key === 'Enter') go();
-});
+function closePlayer(){
+  document.getElementById('player').style.display='none';
+  document.getElementById('iframe').src='';
+}
+
+// Page load e default search
+search();
 </script>
 
 </body>
